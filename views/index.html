@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CHAT APP</title>
+    <link rel="stylesheet" href="/index.css">
+</head>
+<body>
+    <script src="/socket.io/socket.io.js"></script>
+    <div class="main">
+        <div class="chatContainer">
+            <div class="chatRoom">
+                <h1>Chatroom</h1>
+                <button id="exitButton">Exit</button>
+            </div>
+            <div class="chatMessages">
+                <div id="messagesContainer"></div>
+                <ul id="joinChatContainer"></ul>
+            </div>
+            <form class="inputContainer" id="form" action="">
+                <input type="text" placeholder="Type what's on your mind" id="input">
+                <button id="button">Send</button>
+            </form>
+        </div>
+    </div>
+    <script>
+// Create a WebSocket connection to the server
+ const socket = io();
+ 
+ //Get HTML references
+ const form = document.getElementById('form');
+ const input = document.getElementById('input');
+ const messages = document.getElementById('messagesContainer');
+ const exitButton = document.getElementById('exitButton');
+ const joinChatContainer = document.getElementById('joinChatContainer');
+
+
+ //Get the username from the user
+ const username = prompt('Enter your username');
+ //Create a unique identifier using the username
+
+ // Add an event listener for the form submission
+ form.addEventListener('submit' ,(e) =>{
+     e.preventDefault();
+     // Check if the input field has a value
+     if(input.value){
+         // Emit a 'chat message' event to the server with the input value
+         socket.emit('chat message' ,input.value ,username);
+         input.value = '';
+     }
+ });
+
+ // Handle "Exit" button click
+ exitButton.addEventListener('click', () => {
+    // Emit a disconnect event or perform any necessary cleanup
+    window.location.href = '/entry.html'; // Redirect to the entry page
+ });
+
+ let emitChatMessages = () =>{
+     socket.on('chat message' ,(data) =>{
+
+     //Create a new list item to display the chat message
+     const messageContainer = document.createElement('div');
+
+     const messageData = document.createElement('span');
+     messageData.textContent = data.message;
+
+     //Calling the displayCurrentTime() function
+     const messageTime = displyCurrentTime();
+
+     // Set the text content of the list item to the received message
+     messageContainer.appendChild(messageData);
+     messageContainer.appendChild(messageTime);
+     
+    if(data.sender === username){
+        myFunctionStyle(messageContainer,"black","block","white" ,"fit-content" ,"5px 10px" ,"5px" ,"5px" ,"normal" ,"left");
+    }else{
+        myFunctionStyle(messageContainer,"grey","block","white" ,"fit-content" ,"5px 10px" ,"5px" ,"5px" ,"normal" ,"right");
+        messageContainer.style.marginLeft = "auto";
+    }
+
+     // Append the styled list item to the messages container
+     messages.appendChild(messageContainer);
+
+     window.scrollTo(0, document.body.scrollHeight);
+ });
+}
+
+let emitJoinMessages = () => {
+    socket.on('join message', (msg) => {
+        const joinChatName = document.createElement('li');
+        joinChatName.textContent = msg;
+
+        // Apply custom styling to the created list item using the myFunctionStyle function
+        myFunctionStyle(joinChatName, "block","transparent", "grey", "fit-content", "5px 10px", "2px auto", "0px" ,"italic" ,"center");
+
+        joinChatContainer.appendChild(joinChatName);
+        window.scrollTo(0, document.body.scrollHeight);
+    });
+}
+// Emit 'join chat' event to the server with username and userId
+socket.emit('join chat' ,username);
+// Emit 'join chat' event to the server with username and userId
+emitJoinMessages();
+emitChatMessages();
+
+//Function to style the messages between the users.
+let myFunctionStyle = (element ,bgColor, display, color, width, padding, margin, borderRadius ,fontStyle ,textAlign) =>{
+     element.style.backgroundColor = bgColor;
+     element.style.display = display;
+     element.style.color = color;
+     element.style.width = width;
+     element.style.padding = padding;
+     element.style.margin = margin;
+     element.style.borderRadius = borderRadius;
+     element.style.fontStyle = fontStyle;
+     element.style.textAlign = textAlign;
+};
+
+//Function to display the current time and appending it to a Span element
+let displyCurrentTime = () =>{
+    let currentHour = new Date().getHours();
+    let currentMinute = new Date().getMinutes();
+
+    const messageTime = document.createElement('span');
+    messageTime.textContent = `${currentHour}:${currentMinute}`;
+    messageTime.style.fontSize = "10px"
+    messageTime.style.marginLeft = "15px";
+
+    return messageTime;
+}
+</script> 
+</body>
+</html>
